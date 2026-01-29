@@ -1,44 +1,57 @@
 pipeline {
     agent any
+
+    environment {
+        IMAGE_NAME = "flask-app"
+    }
+
     stages {
         stage("Checkout") {
             steps {
+                echo "Checking out code from GitHub..."
                 git branch: "main",
                     url: "https://github.com/ashrafmusalman/python-flask-cicd.git"
             }
         }
-        stage("Build and Deploy") {
+
+        stage("Set Docker Env for Minikube") {
             steps {
+                echo "Configuring Docker to use Minikube..."
+                sh 'eval $(minikube docker-env)'
+            }
+        }
+
+        stage("Build Docker Image") {
+            steps {
+                echo "Building Docker image with latest code..."
+                // --no-cache ensures fresh build every time
+                sh 'docker build --no-cache -t $IMAGE_NAME:latest .'
+            }
+        }
+
+        stage("Deploy to Kubernetes") {
+            steps {
+                echo "Applying Kubernetes manifests..."
                 sh '''
-                # Set Docker environment to Minikube AND build in same shell
-                eval $(minikube docker-env)
-                
-                # Build Docker image
-                docker build -t flask-app:latest .
-                
-                # Verify image was built
-                docker images | grep flask-app
-                
-                # Deploy to Kubernetes
                 kubectl apply -f k8s/Deployment.yaml
                 kubectl apply -f k8s/Service.yaml
-                
-                # Show deployment status
-                kubectl get pods
-                kubectl get svc
+
+                echo "Restarting pods to pick up new image..."
+                kubectl rollout restart deployment flask-deployment
                 '''
             }
         }
     }
+
     post {
-        success {
-            echo "✅ Pipeline completed successfully!"
-        }
-        failure {
-            echo "❌ Pipeline failed. Check logs above."
-        }
         always {
             echo "Pipeline finished."
+        }
+        success {
+            echo "✅ Build and deployment completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check logs for errors."
         }
     }
 }
