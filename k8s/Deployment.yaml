@@ -4,38 +4,26 @@ metadata:
   name: flask-deployment
   labels:
     app: flask-app
-
 spec:
   replicas: 3
-
   selector:
     matchLabels:
       app: flask-app
-
   template:
     metadata:
       labels:
         app: flask-app
-
     spec:
       containers:
-      - name: flask-container
-        image: flask-app:latest
-        imagePullPolicy: Never
-
-        ports:
-        - containerPort: 5000
-          targetPort: 5000   # Container port
-          nodePort: 31497    
-        
-        
-
-        # ✅ Resources must be inside container
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "250m"
-
+        - name: flask-container
+          image: flask-app:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000   # Only this
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
