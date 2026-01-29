@@ -25,6 +25,10 @@ spec:
 
         ports:
         - containerPort: 5000
+          targetPort: 5000   # Container port
+          nodePort: 31497    
+        
+        
 
         # ✅ Resources must be inside container
         resources:
@@ -34,3 +38,4 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "250m"
+
